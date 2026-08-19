@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIP & Wealth Builder Calculator</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Local Dependency Libraries -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/lucide.min.js"></script>
+  <script src="js/chart.min.js"></script>
+</head>
+<body>
+  
+  <div class="container">
+    
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="logo-container">
+        <div class="brand-wrapper">
+          <i data-lucide="trending-up"></i>
+          <h1>FIRE & Wealth Tools</h1>
+        </div>
+        <p>Interactive Systematic Investment Plan & Wealth Accumulation Planner</p>
+      </div>
+      
+      <div class="header-actions">
+        <nav class="nav-links">
+          <a href="index.html" class="nav-link">
+            <i data-lucide="activity"></i> SWP Runway
+          </a>
+          <a href="sip-calculator.html" class="nav-link active">
+            <i data-lucide="landmark"></i> SIP Builder
+          </a>
+        </nav>
+        
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark/light theme">
+          <i data-lucide="sun" id="theme-icon-light" style="display: none;"></i>
+          <i data-lucide="moon" id="theme-icon-dark"></i>
+          <span id="theme-text">Dark Mode</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      
+      <!-- Left Panel: Slider Controls -->
+      <section class="panel-card">
+        <h2 class="panel-title">
+          <i data-lucide="sliders"></i> Investment Parameters
+        </h2>
+        
+        <form id="calc-form" onsubmit="return false;">
+          
+          <!-- Section 1: Contribution Details -->
+          <h3 class="input-section-title">Contribution Plan</h3>
+          
+          <!-- Parameter 1: Initial Lumpsum -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="initialLumpsum-slider" class="input-label">
+                  Initial Lumpsum / Corpus
+                </label>
+                <div class="input-label-subtitle">Starting lump sum investment</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="initialLumpsum-input" data-id="initialLumpsum">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="initialLumpsum-slider" data-id="initialLumpsum" min="0" max="50000000" step="50000" value="10000000">
+            </div>
+          </div>
+          
+          <!-- Parameter 2: Monthly SIP -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="monthlySip-slider" class="input-label">
+                  Monthly SIP Amount
+                </label>
+                <div class="input-label-subtitle">Regular monthly investment</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="monthlySip-input" data-id="monthlySip">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="monthlySip-slider" data-id="monthlySip" min="1000" max="1000000" step="1000" value="100000">
+            </div>
+          </div>
+          
+          <!-- Parameter 3: Annual Step-Up -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="stepUpRate-slider" class="input-label">
+                  Annual Step-Up Rate
+                </label>
+                <div class="input-label-subtitle">Increase SIP amount yearly by %</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="stepUpRate-input" data-id="stepUpRate">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="stepUpRate-slider" data-id="stepUpRate" min="0" max="30" step="1" value="5">
+            </div>
+          </div>
+
+          <!-- Section 2: Returns & Horizon -->
+          <h3 class="input-section-title" style="margin-top: 24px;">Growth Options</h3>
+          
+          <!-- Parameter 4: Expected Return -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="expectedReturn-slider" class="input-label">
+                  Expected Return (% p.a.)
+                </label>
+                <div class="input-label-subtitle">Average annual rate of return</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="expectedReturn-input" data-id="expectedReturn">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="expectedReturn-slider" data-id="expectedReturn" min="4" max="25" step="0.25" value="9">
+            </div>
+          </div>
+          
+          <!-- Parameter 5: Investment Horizon -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="investmentYears-slider" class="input-label">
+                  Investment Horizon
+                </label>
+                <div class="input-label-subtitle">Horizon duration in years</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="investmentYears-input" data-id="investmentYears">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="investmentYears-slider" data-id="investmentYears" min="1" max="40" step="1" value="15">
+            </div>
+          </div>
+
+          <!-- Parameter 6: Inflation Rate (Informational) -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="inflationRate-slider" class="input-label">
+                  Expected Inflation Rate (%)
+                  <span class="help-tooltip" title="Used purely to calculate purchasing power in today's money">
+                    <i data-lucide="help-circle"></i>
+                  </span>
+                </label>
+                <div class="input-label-subtitle">For purchasing power calculation</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="inflationRate-input" data-id="inflationRate">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="inflationRate-slider" data-id="inflationRate" min="0" max="12" step="0.25" value="6">
+            </div>
+          </div>
+          
+        </form>
+      </section>
+
+      <!-- Right Panel: Visual Dashboard -->
+      <main class="dashboard-right">
+        
+        <!-- Key Metrics Cards Row -->
+        <div class="metrics-grid">
+          
+          <!-- Metric 1: Total Invested -->
+          <div class="metric-card" id="metric-invested">
+            <div class="metric-header">
+              <span class="metric-title">Total Invested</span>
+              <div class="metric-icon-container text-accent">
+                <i data-lucide="wallet"></i>
+              </div>
+            </div>
+            <div class="metric-value" id="val-totalInvested">₹0</div>
+            <div class="metric-subtitle">Principal investment accumulated</div>
+          </div>
+          
+          <!-- Metric 2: Wealth Gained -->
+          <div class="metric-card status-safe" id="metric-growth">
+            <div class="metric-header">
+              <span class="metric-title">Wealth Gained</span>
+              <div class="metric-icon-container text-safe">
+                <i data-lucide="trending-up"></i>
+              </div>
+            </div>
+            <div class="metric-value text-safe" id="val-wealthGained">₹0</div>
+            <div class="metric-subtitle">Compound returns earned</div>
+          </div>
+          
+          <!-- Metric 3: Total Nominal Corpus -->
+          <div class="metric-card" id="metric-total">
+            <div class="metric-header">
+              <span class="metric-title">Total Future Wealth</span>
+              <div class="metric-icon-container text-accent">
+                <i data-lucide="award"></i>
+              </div>
+            </div>
+            <div class="metric-value" id="val-nominalCorpus" style="font-size: 1.45rem; font-weight: 800;">₹0</div>
+            <div class="metric-subtitle">Nominal future value of corpus</div>
+          </div>
+          
+          <!-- Metric 4: Inflation Adjusted -->
+          <div class="metric-card" id="metric-real">
+            <div class="metric-header">
+              <span class="metric-title">Inflation-Adjusted Value</span>
+              <div class="metric-icon-container text-warning">
+                <i data-lucide="scale"></i>
+              </div>
+            </div>
+            <div class="metric-value text-warning" id="val-realCorpus">₹0</div>
+            <div class="metric-subtitle" id="sub-realCorpus">In today's purchasing power</div>
+          </div>
+          
+        </div>
+
+        <!-- Chart Section -->
+        <section class="panel-card">
+          <div class="chart-header-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 class="panel-title" style="margin-bottom: 0;">
+              <i data-lucide="bar-chart-2"></i> Wealth Growth Trajectory
+            </h2>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="sip-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Data Schedule Section -->
+        <section class="accordion-section">
+          <div class="accordion-header" id="table-toggle">
+            <h2 class="accordion-title">
+              <i data-lucide="table"></i> View Year-by-Year Wealth Progression
+            </h2>
+            <i data-lucide="chevron-down" class="accordion-icon"></i>
+          </div>
+          
+          <div class="accordion-body" id="table-body">
+            <div class="table-responsive">
+              <table class="financial-table">
+                <thead>
+                  <tr>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">Monthly SIP</th>
+                    <th class="num-col">Yearly Contribution</th>
+                    <th class="num-col">Total Invested</th>
+                    <th class="num-col">Returns Earned</th>
+                    <th class="num-col">Future Wealth</th>
+                    <th class="num-col">Real Value (Today's ₹)</th>
+                  </tr>
+                </thead>
+                <tbody id="financial-rows">
+                  <!-- JS dynamically populates content -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        
+      </main>
+      
+    </div>
+  </div>
+
+  <!-- Main logic controller -->
+  <script src="js/sip.js"></script>
+</body>
+</html>

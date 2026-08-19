@@ -187,12 +187,12 @@ $(document).ready(function() {
       const $slider = $(`#${key}-slider`);
       const $input = $(`#${key}-input`);
       
-      // Determine value from URL query parameters or config default
+      // Determine value from URL query parameters (highest priority) or defaults
       let val = config.default;
+      
       if (urlParams.has(key)) {
         const parsed = parseFloat(urlParams.get(key));
         if (!isNaN(parsed)) {
-          // Clamp value to input bounds
           val = Math.max(config.min, Math.min(config.max, parsed));
         }
       }
@@ -211,15 +211,27 @@ $(document).ready(function() {
     syncMilestoneAgeBounds();
   }
 
-  // Update URL Query parameters with current parameter values
+  // Update URL Query parameters with current parameter values, preserving other pages' parameters
   function updateURLQueryParams() {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(window.location.search);
     Object.keys(inputsConfig).forEach(key => {
       const val = parseFloat($(`#${key}-slider`).val());
       params.set(key, val);
     });
+    
+    // Synchronize initialCorpus and initialLumpsum parameter values
+    if (params.has('initialCorpus')) {
+      params.set('initialLumpsum', params.get('initialCorpus'));
+    } else if (params.has('initialLumpsum')) {
+      params.set('initialCorpus', params.get('initialLumpsum'));
+    }
+    
     const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState(null, '', newUrl);
+    try {
+      window.history.replaceState(null, '', newUrl);
+    } catch (e) {
+      // Silently catch security exceptions if running locally via file:// protocol
+    }
   }
 
   function syncMilestoneAgeBounds() {
@@ -355,6 +367,28 @@ $(document).ready(function() {
   $('#table-toggle').on('click', function() {
     $(this).toggleClass('open');
     $('#table-body').slideToggle(300);
+  });
+
+  // Retain URL query parameters when navigating between tools
+  $('.nav-link').on('click', function(e) {
+    e.preventDefault();
+    const href = $(this).attr('href');
+    
+    // Dynamically build parameters from active slider values to bypass browser file:// limits
+    const params = new URLSearchParams(window.location.search);
+    Object.keys(inputsConfig).forEach(key => {
+      const val = parseFloat($(`#${key}-slider`).val());
+      params.set(key, val);
+    });
+    
+    // Sync initialCorpus and initialLumpsum
+    if (params.has('initialCorpus')) {
+      params.set('initialLumpsum', params.get('initialCorpus'));
+    } else if (params.has('initialLumpsum')) {
+      params.set('initialCorpus', params.get('initialLumpsum'));
+    }
+    
+    window.location.href = href + '?' + params.toString();
   });
 
   // Main math engine

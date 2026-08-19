@@ -111,9 +111,44 @@ Every parameter is supported by a dual-interactive control: a smooth range slide
 
 ---
 
+## 🛠️ Multi-Tool Navigation (Header)
+
+A shared navigation header is integrated into both pages under the **"FIRE & Wealth Tools"** suite title:
+- **SWP Runway**: Opens [index.html](file:///c:/workspace/investment-calc-app/index.html) to calculate retirement longevity and systematic withdrawals.
+- **SIP Builder**: Opens [sip-calculator.html](file:///c:/workspace/investment-calc-app/sip-calculator.html) to calculate systematic compound growth and future wealth.
+- **Parameter Retention on Navigation**: Link clicks dynamically intercept redirects and serialize slider values from the DOM, merging them with the current URL query parameters. This ensures that parameters specific to one page (e.g. `startAge` on the SWP page) are preserved in the query string when switching to the other page, carrying them back and forth cleanly.
+- **Independent Parameter Namespaces (No Conflicts)**: To prevent parameters from overriding one another, both pages use completely separate parameter key namespaces in the query string:
+  - **SWP parameters**: `initialCorpus`, `expectedReturn`, `inflationRate`, etc.
+  - **SIP parameters**: `initialLumpsum`, `sipExpectedReturn`, `sipInflationRate`, `monthlySip`, `stepUpRate`, `investmentYears`.
+- **Error Protection**: Wrapped all URL history changes inside `try...catch` blocks to prevent script failures in restricted offline browser contexts (such as `file://` protocols).
+- Both pages share the exact visual guidelines, dark/light toggle switches, and responsive CSS limits.
+
+---
+
+## 📈 SIP Wealth Builder & Compound growth Calculator (`sip-calculator.html`)
+
+This tool projects compound interest accumulation month-by-month over a set horizon, accounting for annual step-up rates and inflation.
+
+### Math Compounding Progression
+For each year $y$:
+* Annualized Step-up contributions are computed:
+  $$\text{Monthly SIP}_y = \text{Initial SIP} \times (1 + \text{StepUp Rate})^{(y-1)}$$
+* Compounded monthly over 12 months:
+  $$\text{Balance} = (\text{Balance} + \text{Monthly SIP}_y) \times (1 + \text{Expected Return}/12)$$
+* Real value discounted for inflation:
+  $$\text{Real Value}_y = \frac{\text{Nominal Balance}_y}{(1 + \text{Inflation})^y}$$
+
+### Features
+* **Double-Layer Stacked Area Plot**: Renders the principal invested capital (blue area) and the compound interest returns/wealth gained (emerald area) stacked.
+* **Inflation Adjustment KPI**: Highlights today's purchasing power equivalents at custom inflation rates.
+* **Interactive Tooltips & Key Controls**: Custom text formatting (Lakhs/Crores), arrow-key adjustments, and real-time query parameter state-saving.
+
+---
+
 ## 🚀 How to Run Locally
 
 Since this dashboard is completely self-contained and utilizes local static resources, it does not require internet access or active server environments to run.
 
 1. Clone or download the folder.
 2. Double-click `index.html` to load the application in any modern web browser (Chrome, Edge, Firefox, Safari).
+3. Use the navigation links in the header to switch between the SWP Runway and SIP Builder tools.

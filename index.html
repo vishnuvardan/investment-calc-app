@@ -25,14 +25,29 @@
     <!-- Top Navigation Header -->
     <header>
       <div class="logo-container">
-        <h1>Longevity SWP Dashboard</h1>
+        <div class="brand-wrapper">
+          <i data-lucide="trending-up"></i>
+          <h1>FIRE & Wealth Tools</h1>
+        </div>
         <p>Interactive Retirement & Systematic Withdrawal Planner</p>
       </div>
-      <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark/light theme">
-        <i data-lucide="sun" id="theme-icon-light" style="display: none;"></i>
-        <i data-lucide="moon" id="theme-icon-dark"></i>
-        <span id="theme-text">Dark Mode</span>
-      </button>
+      
+      <div class="header-actions">
+        <nav class="nav-links">
+          <a href="index.html" class="nav-link active">
+            <i data-lucide="activity"></i> SWP Runway
+          </a>
+          <a href="sip-calculator.html" class="nav-link">
+            <i data-lucide="landmark"></i> SIP Builder
+          </a>
+        </nav>
+        
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark/light theme">
+          <i data-lucide="sun" id="theme-icon-light" style="display: none;"></i>
+          <i data-lucide="moon" id="theme-icon-dark"></i>
+          <span id="theme-text">Dark Mode</span>
+        </button>
+      </div>
     </header>
 
     <div class="dashboard-grid">
