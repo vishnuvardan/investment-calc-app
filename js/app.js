@@ -59,64 +59,88 @@ $(document).ready(function() {
       max: 75,
       formatter: val => `${val} Years`
     },
+    retirementAge: {
+      id: 'retirementAge',
+      type: 'int',
+      default: 55,
+      min: 21,
+      max: 80,
+      formatter: val => `${val} Years`
+    },
     initialCorpus: {
       id: 'initialCorpus',
       type: 'currency',
       default: 10000000,
-      min: 2500000,
+      min: 0,
       max: 100000000,
       formatter: val => formatINR(val, false)
+    },
+    monthlySip: {
+      id: 'monthlySip',
+      type: 'currency',
+      default: 100000,
+      min: 0,
+      max: 1000000,
+      formatter: val => formatINR(val, false)
+    },
+    stepUpRate: {
+      id: 'stepUpRate',
+      type: 'percent',
+      default: 5,
+      min: 0,
+      max: 30,
+      formatter: val => `${val}%`
+    },
+    expectedReturn: {
+      id: 'expectedReturn',
+      type: 'percent',
+      default: 12.0,
+      min: 4.0,
+      max: 25.0,
+      formatter: val => `${val.toFixed(2)}%`
     },
     annualExpenses: {
       id: 'annualExpenses',
       type: 'currency',
-      default: 755000,
+      default: 1000000,
       min: 200000,
-      max: 3000000,
+      max: 5000000,
       formatter: val => formatINR(val, false),
       extraUpdate: val => {
         const monthly = Math.round(val / 12);
         $('#annualExpenses-monthly').text(`(₹${monthly.toLocaleString('en-IN')}/mo)`);
       }
     },
-    inflationRate: {
-      id: 'inflationRate',
-      type: 'percent',
-      default: 6.0,
-      min: 3.0,
-      max: 12.0,
-      formatter: val => `${val.toFixed(2)}%`
+    swpDuration: {
+      id: 'swpDuration',
+      type: 'int',
+      default: 35,
+      min: 1,
+      max: 70,
+      formatter: val => `${val} Years`
     },
-    expectedReturn: {
-      id: 'expectedReturn',
+    postExpectedReturn: {
+      id: 'postExpectedReturn',
       type: 'percent',
       default: 8.5,
       min: 4.0,
       max: 15.0,
       formatter: val => `${val.toFixed(2)}%`
     },
-    milestoneAmount: {
-      id: 'milestoneAmount',
-      type: 'currency',
-      default: 5000000,
-      min: 0,
-      max: 15000000,
-      formatter: val => formatINR(val, false)
-    },
-    milestoneAge: {
-      id: 'milestoneAge',
-      type: 'int',
-      default: 45,
-      min: 36, // starting age + 1 (dynamically computed)
-      max: 75,
-      formatter: val => `${val} Years`
+    inflationRate: {
+      id: 'inflationRate',
+      type: 'percent',
+      default: 6.0,
+      min: 0.0,
+      max: 12.0,
+      formatter: val => `${val.toFixed(2)}%`
     },
     sideIncome: {
       id: 'sideIncome',
       type: 'currency',
       default: 0,
       min: 0,
-      max: 200000,
+      max: 500000,
       formatter: val => formatINR(val, false),
       extraUpdate: val => {
         const annual = Math.round(val * 12);
@@ -129,6 +153,22 @@ $(document).ready(function() {
       default: 5,
       min: 0,
       max: 25,
+      formatter: val => `${val} Years`
+    },
+    milestoneAmount: {
+      id: 'milestoneAmount',
+      type: 'currency',
+      default: 0,
+      min: 0,
+      max: 50000000,
+      formatter: val => formatINR(val, false)
+    },
+    milestoneAge: {
+      id: 'milestoneAge',
+      type: 'int',
+      default: 45,
+      min: 21,
+      max: 90,
       formatter: val => `${val} Years`
     }
   };
@@ -207,7 +247,9 @@ $(document).ready(function() {
       }
     });
     
-    // Dynamically compute boundary constraints for Milestone Occurs Age based on Starting Age
+    // Dynamically compute initial boundary constraints
+    syncRetirementAgeBounds();
+    syncSWPDurationBounds();
     syncMilestoneAgeBounds();
   }
 
@@ -234,24 +276,67 @@ $(document).ready(function() {
     }
   }
 
+  function syncRetirementAgeBounds() {
+    const startAge = parseInt($('#startAge-slider').val());
+    const minRetirementAge = startAge + 1;
+    const maxRetirementAge = 80;
+    
+    const $retirementSlider = $('#retirementAge-slider');
+    const $retirementInput = $('#retirementAge-input');
+    
+    let currentRetirement = parseInt($retirementSlider.val());
+    
+    $retirementSlider.attr('min', minRetirementAge);
+    $retirementSlider.attr('max', maxRetirementAge);
+    inputsConfig.retirementAge.min = minRetirementAge;
+    
+    if (currentRetirement < minRetirementAge) {
+      currentRetirement = Math.min(maxRetirementAge, startAge + 20);
+      $retirementSlider.val(currentRetirement);
+      if (!$retirementInput.is(':focus')) {
+        $retirementInput.val(inputsConfig.retirementAge.formatter(currentRetirement));
+      }
+    }
+    
+    updateSliderTrack($retirementSlider);
+  }
+
+  function syncSWPDurationBounds() {
+    const retirementAge = parseInt($('#retirementAge-slider').val());
+    const maxDuration = Math.max(1, 90 - retirementAge);
+    const $durationSlider = $('#swpDuration-slider');
+    const $durationInput = $('#swpDuration-input');
+    
+    let currentDuration = parseInt($durationSlider.val());
+    
+    $durationSlider.attr('max', maxDuration);
+    inputsConfig.swpDuration.max = maxDuration;
+    
+    if (currentDuration > maxDuration) {
+      currentDuration = maxDuration;
+      $durationSlider.val(currentDuration);
+      if (!$durationInput.is(':focus')) {
+        $durationInput.val(inputsConfig.swpDuration.formatter(currentDuration));
+      }
+    }
+    
+    updateSliderTrack($durationSlider);
+  }
+
   function syncMilestoneAgeBounds() {
     const startAge = parseInt($('#startAge-slider').val());
     const minMilestoneAge = startAge + 1;
-    const maxMilestoneAge = 75;
+    const maxMilestoneAge = 90;
     
     const $milestoneSlider = $('#milestoneAge-slider');
     const $milestoneInput = $('#milestoneAge-input');
     
-    // Read current milestone age value
     let currentMilestone = parseInt($milestoneSlider.val());
     
-    // Apply bounds to slider attributes
     $milestoneSlider.attr('min', minMilestoneAge);
     $milestoneSlider.attr('max', maxMilestoneAge);
-    
     inputsConfig.milestoneAge.min = minMilestoneAge;
     
-    // If current value is invalid or out of range, re-sync to standard offset (+10 years or max)
     if (currentMilestone < minMilestoneAge) {
       currentMilestone = Math.min(maxMilestoneAge, minMilestoneAge + 10);
       $milestoneSlider.val(currentMilestone);
@@ -280,9 +365,12 @@ $(document).ready(function() {
       config.extraUpdate(val);
     }
     
-    // If startAge changed, milestone constraints need updating
     if (id === 'startAge') {
+      syncRetirementAgeBounds();
+      syncSWPDurationBounds();
       syncMilestoneAgeBounds();
+    } else if (id === 'retirementAge') {
+      syncSWPDurationBounds();
     }
     
     // Rerun model
@@ -319,7 +407,11 @@ $(document).ready(function() {
     }
     
     if (id === 'startAge') {
+      syncRetirementAgeBounds();
+      syncSWPDurationBounds();
       syncMilestoneAgeBounds();
+    } else if (id === 'retirementAge') {
+      syncSWPDurationBounds();
     }
     
     calculateAndRender(false); // full redraw on edit end
@@ -356,7 +448,11 @@ $(document).ready(function() {
       }
       
       if (id === 'startAge') {
+        syncRetirementAgeBounds();
+        syncSWPDurationBounds();
         syncMilestoneAgeBounds();
+      } else if (id === 'retirementAge') {
+        syncSWPDurationBounds();
       }
       
       calculateAndRender(false);
@@ -364,9 +460,9 @@ $(document).ready(function() {
   });
 
   // Accordion Toggle
-  $('#table-toggle').on('click', function() {
+  $('.accordion-header').on('click', function() {
     $(this).toggleClass('open');
-    $('#table-body').slideToggle(300);
+    $(this).next('.accordion-body').slideToggle(300);
   });
 
   // Retain URL query parameters when navigating between tools
@@ -390,178 +486,219 @@ $(document).ready(function() {
     
     window.location.href = href + '?' + params.toString();
   });
-
-  // Main math engine
+  // Main math calculation and rendering engine
   function calculateAndRender(fastUpdate = false) {
     // Collect model parameters
     const startAge = parseInt($('#startAge-slider').val());
+    const retirementAge = parseInt($('#retirementAge-slider').val());
     const initialCorpus = parseFloat($('#initialCorpus-slider').val());
-    const initialExpense = parseFloat($('#annualExpenses-slider').val());
-    const inflationRate = parseFloat($('#inflationRate-slider').val()) / 100;
+    const monthlySip = parseFloat($('#monthlySip-slider').val());
+    const stepUpRate = parseFloat($('#stepUpRate-slider').val()) / 100;
     const expectedReturn = parseFloat($('#expectedReturn-slider').val()) / 100;
-    
+    const annualExpenses = parseFloat($('#annualExpenses-slider').val());
+    const swpDuration = parseInt($('#swpDuration-slider').val());
+    const postExpectedReturn = parseFloat($('#postExpectedReturn-slider').val()) / 100;
+    const inflationRate = parseFloat($('#inflationRate-slider').val()) / 100;
+    const sideIncome = parseFloat($('#sideIncome-slider').val());
+    const sideIncomeDuration = parseInt($('#sideIncomeDuration-slider').val());
     const milestoneAmount = parseFloat($('#milestoneAmount-slider').val());
     const milestoneAge = parseInt($('#milestoneAge-slider').val());
-    
-    const monthlySideIncome = parseFloat($('#sideIncome-slider').val());
-    const incomeDuration = parseInt($('#sideIncomeDuration-slider').val());
-    
-    // Simulation details
-    const maxSimulationAge = 100;
-    const yearsToRun = maxSimulationAge - startAge;
-    
-    let closingBalance = initialCorpus;
-    const results = [];
+
+    let results = [];
+    let balance = initialCorpus;
+    let totalInvested = initialCorpus;
     let depleted = false;
     let depletionAge = null;
     let peakCorpus = initialCorpus;
     let peakAge = startAge;
     
-    // Check milestone parameters
+    // Project until age 90
+    const maxAge = 90;
+    const totalYears = Math.max(1, maxAge - startAge);
+    
     const isMilestoneEnabled = milestoneAmount > 0;
     if (isMilestoneEnabled) {
       $('#chart-milestone-indicator').show();
     } else {
       $('#chart-milestone-indicator').hide();
     }
-    
-    for (let t = 0; t <= yearsToRun; t++) {
-      const age = startAge + t;
-      
-      let opening = depleted ? 0 : closingBalance;
-      
-      // Living Expenses inflate compounding every year
-      let expenses = depleted ? 0 : initialExpense * Math.pow(1 + inflationRate, t);
-      
-      // Side income lasts for 'incomeDuration' years
-      let sideIncome = 0;
-      if (!depleted && t < incomeDuration) {
-        sideIncome = monthlySideIncome * 12;
-      }
-      
-      // Base net outflow is expenses offset by side income
-      let netBaseOutflow = Math.max(0, expenses - sideIncome);
-      
-      // Add Milestone lump sum at trigger age
+
+    // Add starting age year 0 row
+    results.push({
+      year: 0,
+      age: startAge,
+      phase: 'Start',
+      monthlySip: 0,
+      yearlyContribution: 0,
+      yearlyWithdrawal: 0,
+      milestoneOutflow: 0,
+      returns: 0,
+      totalInvested: totalInvested,
+      totalValue: initialCorpus,
+      realValue: initialCorpus
+    });
+
+    // Month-by-month projection loop
+    for (let y = 1; y <= totalYears; y++) {
+      const age = startAge + y;
+      let opening = balance;
+      let yearlyContribution = 0;
+      let yearlyWithdrawal = 0;
+      let yearlyReturns = 0;
+      let yearlySideIncome = 0;
       let milestoneOutflow = 0;
-      if (!depleted && age === milestoneAge && isMilestoneEnabled) {
-        milestoneOutflow = milestoneAmount;
-      }
+      let phase = age <= retirementAge ? 'Accumulation' : 'Withdrawal';
       
-      let totalOutflow = netBaseOutflow + milestoneOutflow;
-      
-      // Portfolio returns earned during the year
-      let returns = 0;
-      if (!depleted) {
-        returns = opening * expectedReturn;
-      }
-      
-      let closing = 0;
-      let firstDepletedYear = false;
-      
-      if (!depleted) {
-        closing = opening + returns - totalOutflow;
-        if (closing <= 0) {
-          closing = 0;
-          depleted = true;
-          depletionAge = age;
-          firstDepletedYear = true;
+      if (phase === 'Accumulation') {
+        const currentReturn = expectedReturn / 12;
+        const monthlySipAmount = monthlySip * Math.pow(1 + stepUpRate, y - 1);
+        
+        for (let m = 1; m <= 12; m++) {
+          const prevBalance = balance;
+          balance = (balance + monthlySipAmount) * (1 + currentReturn);
+          totalInvested += monthlySipAmount;
+          yearlyContribution += monthlySipAmount;
+          yearlyReturns += (balance - prevBalance - monthlySipAmount);
+        }
+      } else {
+        // Decumulation (SWP) Phase
+        const currentReturn = postExpectedReturn / 12;
+        
+        // Living Expenses
+        let annualExpensesAmount = 0;
+        if (age - retirementAge <= swpDuration) {
+          annualExpensesAmount = annualExpenses * Math.pow(1 + inflationRate, (age - 1) - retirementAge);
+        }
+        const monthlySWPAmount = annualExpensesAmount / 12;
+        
+        // Side Income
+        let monthlySideIncomeAmount = 0;
+        if (age - retirementAge <= sideIncomeDuration) {
+          monthlySideIncomeAmount = sideIncome;
+        }
+        
+        for (let m = 1; m <= 12; m++) {
+          const prevBalance = balance;
+          const netMonthlyOutflow = Math.max(0, monthlySWPAmount - monthlySideIncomeAmount);
+          
+          if (balance >= netMonthlyOutflow) {
+            balance = (balance - netMonthlyOutflow) * (1 + currentReturn);
+            yearlyWithdrawal += netMonthlyOutflow;
+            yearlySideIncome += Math.min(monthlySWPAmount, monthlySideIncomeAmount);
+            yearlyReturns += (balance - prevBalance + netMonthlyOutflow);
+          } else {
+            // Depleted!
+            yearlyWithdrawal += balance;
+            yearlyReturns += (0 - prevBalance + balance);
+            balance = 0;
+            depleted = true;
+            depletionAge = age;
+            break; // exit monthly loop
+          }
         }
       }
       
-      closingBalance = closing;
+      // Milestone trigger at year end
+      if (!depleted && age === milestoneAge && isMilestoneEnabled) {
+        if (balance >= milestoneAmount) {
+          balance -= milestoneAmount;
+          milestoneOutflow = milestoneAmount;
+        } else {
+          milestoneOutflow = balance;
+          balance = 0;
+          depleted = true;
+          depletionAge = age;
+        }
+      }
+
+      const totalValue = balance;
+      const realValue = totalValue / Math.pow(1 + inflationRate, y);
       
-      if (closing > peakCorpus) {
-        peakCorpus = closing;
+      if (totalValue > peakCorpus) {
+        peakCorpus = totalValue;
         peakAge = age;
       }
-      
+
       results.push({
-        yearIndex: t, // 0-based year index
+        year: y,
         age: age,
-        opening: opening,
-        returns: returns,
-        expenses: expenses,
-        sideIncome: sideIncome,
+        phase: phase,
+        monthlySip: phase === 'Accumulation' ? monthlySip * Math.pow(1 + stepUpRate, y - 1) : 0,
+        yearlyContribution: yearlyContribution,
+        yearlyWithdrawal: yearlyWithdrawal,
         milestoneOutflow: milestoneOutflow,
-        totalOutflow: totalOutflow,
-        closing: closing,
-        isDepleted: depleted && !firstDepletedYear,
-        isFirstDepletion: firstDepletedYear
+        returns: yearlyReturns,
+        totalInvested: totalInvested,
+        totalValue: totalValue,
+        realValue: realValue
       });
+
+      if (depleted) {
+        break; // stop projecting years if depleted
+      }
     }
-    
-    // Calculate SWR
-    const swr = (initialExpense / initialCorpus) * 100;
-    
-    // Calculate dynamic line style depending on depletion point
+
+    const finalYear = results[results.length - 1];
+
     let themeStatus = 'safe'; // green
-    let displayDepletion = 'Lifelong / 100+';
-    let displayLongevity = `${yearsToRun}+ Years`;
+    let displayDepletion = 'Safe at 90+';
+    let displayLongevity = `${totalYears}+ Years`;
     
     if (depleted && depletionAge !== null) {
       displayDepletion = `Age ${depletionAge}`;
       displayLongevity = `${depletionAge - startAge} Years`;
       
-      if (depletionAge < 70) {
+      if (depletionAge < 60) {
         themeStatus = 'danger'; // red
-      } else if (depletionAge >= 70 && depletionAge < 85) {
+      } else if (depletionAge >= 60 && depletionAge < 75) {
         themeStatus = 'warning'; // orange
       }
     }
-    
-    // Update dashboard metrics
-    updateMetricsHTML(displayLongevity, displayDepletion, peakCorpus, peakAge, swr, themeStatus);
-    
-    // Render Schedule Table
+
+    // Dynamic Real Value at 90
+    const realValueAt90 = finalYear.age >= 90 ? finalYear.realValue : 0;
+
+    // Update metrics HTML
+    updateMetricsHTML(peakCorpus, peakAge, displayDepletion, displayLongevity, totalInvested, realValueAt90, themeStatus);
+
+    // Update Year-by-Year Table
     updateTableHTML(results, milestoneAge, isMilestoneEnabled);
-    
-    // Render Line Chart
+
+    // Update Chart
     updateChart(results, startAge, depletionAge, milestoneAge, isMilestoneEnabled, themeStatus, fastUpdate);
-    
-    // Update URL query parameters to reflect the current input states
+
+    // Sync query parameters
     updateURLQueryParams();
   }
 
-  function updateMetricsHTML(longevity, depletion, peak, peakAge, swr, status) {
+  function updateMetricsHTML(peak, peakAge, depletion, longevity, totalInvested, realCorpus, status) {
     // Reset card statuses
     $('.metric-card').removeClass('status-safe status-warning status-danger');
     
     // Apply status themes
-    $('#metric-longevity, #metric-depletion').addClass(`status-${status}`);
+    $('#metric-depletion').addClass(`status-${status}`);
     
-    // 1. Runway Longevity
-    $('#val-longevity').text(longevity);
+    // 1. Peak Corpus
+    $('#val-peak').text(formatINR(peak, false));
+    $('#sub-peak').text(`Reached at Age ${peakAge}`);
     
     // 2. Depletion Age
     $('#val-depletion').text(depletion);
+    $('#sub-depletion').text(`Active funded years: ${longevity}`);
     if (status === 'safe') {
       $('#icon-depletion').attr('data-lucide', 'check-circle').removeClass('text-danger text-warning').addClass('text-safe');
-      $('#sub-depletion').text('Corpus is highly sustainable');
     } else if (status === 'warning') {
       $('#icon-depletion').attr('data-lucide', 'alert-circle').removeClass('text-safe text-danger').addClass('text-warning');
-      $('#sub-depletion').text('Corpus runs thin at old age');
     } else {
       $('#icon-depletion').attr('data-lucide', 'alert-triangle').removeClass('text-safe text-warning').addClass('text-danger');
-      $('#sub-depletion').text('Corpus depletes before Age 70');
     }
     
-    // 3. Peak Corpus
-    $('#val-peak').text(formatINR(peak, true));
-    $('#sub-peak').text(`Reached at Age ${peakAge}`);
+    // 3. Total Invested (SIP)
+    $('#val-totalInvested').text(formatINR(totalInvested, true));
     
-    // 4. SWR
-    $('#val-swr').text(`${swr.toFixed(2)}%`);
-    if (swr < 4.0) {
-      $('#metric-swr').addClass('status-safe');
-      $('#sub-swr').html('<span class="text-safe" style="font-weight:600;">✓ Safe Withdrawal Rate</span>');
-    } else if (swr >= 4.0 && swr <= 6.0) {
-      $('#metric-swr').addClass('status-warning');
-      $('#sub-swr').html('<span class="text-warning" style="font-weight:600;">⚠ Moderate Withdrawal Rate</span>');
-    } else {
-      $('#metric-swr').addClass('status-danger');
-      $('#sub-swr').html('<span class="text-danger" style="font-weight:600;">✗ High Withdrawal Risk</span>');
-    }
+    // 4. Real Value at Age 90
+    $('#val-realCorpus').text(formatINR(realCorpus, true));
+    $('#sub-realCorpus').text(`Equivalent today's ₹ (${$('#inflationRate-slider').val()}% inflation)`);
     
     // Re-draw icons
     lucide.createIcons();
@@ -572,56 +709,93 @@ $(document).ready(function() {
     $tbody.empty();
     
     for (const r of results) {
+      if (r.year === 0) continue; // skip start state in table
+      
       let rowClass = '';
       let milestoneBadge = '';
       
-      if (r.isFirstDepletion) {
+      if (r.totalValue === 0) {
         rowClass = 'row-depleted-first';
-      } else if (r.isDepleted) {
-        rowClass = 'row-depleted';
       } else if (isMilestoneEnabled && r.age === milestoneAge) {
         rowClass = 'row-milestone';
         milestoneBadge = ' <span class="milestone-badge">Milestone</span>';
       }
       
+      const sipCell = r.phase === 'Accumulation' && r.monthlySip > 0 
+        ? formatINR(r.monthlySip) 
+        : '<span style="opacity: 0.6; font-style: italic;">Stopped</span>';
+        
+      const swpCell = r.phase === 'Withdrawal' && r.yearlyWithdrawal > 0 
+        ? `-${formatINR(r.yearlyWithdrawal)}` 
+        : '<span style="opacity: 0.6; font-style: italic;">Stopped</span>';
+        
+      const returnCell = r.returns > 0 
+        ? `+${formatINR(r.returns)}` 
+        : '₹0';
+        
       const rowHtml = `
         <tr class="${rowClass}">
-          <td class="text-center" style="font-weight: 600;">${r.age}${milestoneBadge}</td>
-          <td class="text-center text-muted">${r.yearIndex}</td>
-          <td class="num-col">${formatINR(r.opening)}</td>
-          <td class="num-col text-safe">+${formatINR(r.returns)}</td>
-          <td class="num-col text-danger">-${formatINR(r.expenses)}</td>
-          <td class="num-col text-safe">${r.sideIncome > 0 ? `+${formatINR(r.sideIncome)}` : '₹0'}</td>
-          <td class="num-col text-accent" style="font-weight: 500;">${r.milestoneOutflow > 0 ? `-${formatINR(r.milestoneOutflow)}` : '₹0'}</td>
-          <td class="num-col" style="font-weight: 700;">${formatINR(r.closing)}</td>
+          <td class="text-center" style="font-weight: 600;">Age ${r.age} (Year ${r.year})${milestoneBadge}</td>
+          <td class="text-center text-muted">${r.phase}</td>
+          <td class="num-col">${sipCell}</td>
+          <td class="num-col text-danger">${swpCell}</td>
+          <td class="num-col text-safe">${returnCell}</td>
+          <td class="num-col" style="font-weight: 700;">${formatINR(r.totalValue)}</td>
+          <td class="num-col text-warning" style="font-weight: 500;">${formatINR(r.realValue)}</td>
         </tr>
       `;
       $tbody.append(rowHtml);
-      
-      if (r.closing === 0) {
-        break;
-      }
     }
   }
 
-  function updateChart(results, startAge, depletionAge, milestoneAge, isMilestoneEnabled, status, fastUpdate) {
-    // Stop plotting the line chart when it hits ₹0
-    chartData = [];
-    for (let i = 0; i < results.length; i++) {
-      const r = results[i];
-      chartData.push(r);
-      if (r.closing === 0 && r.opening > 0) {
-        // First year we hit 0, draw it and stop
-        break;
+  const phaseBackgroundsPlugin = {
+    id: 'phaseBackgrounds',
+    beforeDraw: (chart) => {
+      const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
+      const startAge = parseInt($('#startAge-slider').val());
+      const retirementAge = parseInt($('#retirementAge-slider').val());
+      
+      const xStart = x.getPixelForValue(`Age ${startAge}`);
+      const xRetire = x.getPixelForValue(`Age ${retirementAge}`);
+      
+      if (isNaN(xStart) || isNaN(xRetire)) return;
+      
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      
+      // Shaded blue for Accumulation phase
+      ctx.fillStyle = isDark ? 'rgba(59, 130, 246, 0.05)' : 'rgba(37, 99, 235, 0.03)';
+      ctx.fillRect(left, top, Math.min(xRetire, right) - left, bottom - top);
+      
+      // Shaded amber for Decumulation phase
+      if (xRetire < right) {
+        ctx.fillStyle = isDark ? 'rgba(245, 158, 11, 0.05)' : 'rgba(217, 119, 6, 0.03)';
+        ctx.fillRect(Math.max(xRetire, left), top, right - Math.max(xRetire, left), bottom - top);
       }
-      if (r.opening === 0 && i > 0) {
-        // Already hit 0 in previous year, stop plotting
-        break;
+      
+      // Draw text headings for phases
+      ctx.font = '600 11px Outfit';
+      ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(15, 23, 42, 0.25)';
+      ctx.textAlign = 'center';
+      
+      const sipCenter = left + (Math.min(xRetire, right) - left) / 2;
+      if (sipCenter > left + 40) {
+        ctx.fillText('ACCUMULATION (SIP)', sipCenter, top + 20);
+      }
+      
+      if (xRetire < right) {
+        const swpCenter = Math.max(xRetire, left) + (right - Math.max(xRetire, left)) / 2;
+        if (swpCenter < right - 40) {
+          ctx.fillText('RETIREMENT (SWP)', swpCenter, top + 20);
+        }
       }
     }
+  };
+
+  function updateChart(results, startAge, depletionAge, milestoneAge, isMilestoneEnabled, status, fastUpdate) {
+    chartData = results;
 
     const labels = chartData.map(r => `Age ${r.age}`);
-    const corpusValues = chartData.map(r => r.closing);
+    const corpusValues = chartData.map(r => r.totalValue);
     
     let colorToken = '';
     let fillToken = '';
@@ -754,34 +928,51 @@ $(document).ready(function() {
                   const index = tooltipItems[0].dataIndex;
                   const r = chartData[index];
                   if (!r) return '';
-                  return `Age ${r.age} (Year ${r.yearIndex})`;
+                  return r.year === 0 ? `Age ${r.age} (Start)` : `Age ${r.age} (Year ${r.year})`;
                 },
                 label: function(context) {
                   const index = context.dataIndex;
                   const r = chartData[index];
                   if (!r) return [];
                   
+                  if (r.phase === 'Start') {
+                    return [
+                      `Phase: Initial Start`,
+                      `Corpus Balance: ${formatINR(r.totalValue)}`
+                    ];
+                  }
+                  
                   const lines = [
-                    `Closing Balance: ${formatINR(r.closing)}`,
-                    `Opening Corpus: ${formatINR(r.opening)}`,
-                    `Returns Earned: +${formatINR(r.returns)}`,
-                    `Total Expense: -${formatINR(r.expenses)}`
+                    `Phase: ${r.phase === 'Accumulation' ? 'Accumulation (SIP)' : 'Retirement (SWP)'}`
                   ];
                   
-                  if (r.sideIncome > 0) {
-                    lines.push(`Side Income: +${formatINR(r.sideIncome)}`);
+                  if (r.phase === 'Accumulation') {
+                    lines.push(`Monthly SIP: ${formatINR(r.monthlySip)}`);
+                    lines.push(`Yearly Contribution: +${formatINR(r.yearlyContribution)}`);
+                  } else {
+                    if (r.yearlyWithdrawal > 0) {
+                      lines.push(`SWP Outflow: -${formatINR(r.yearlyWithdrawal)}`);
+                    } else {
+                      lines.push(`SWP Outflow: Stopped`);
+                    }
                   }
                   
-                  if (isMilestoneEnabled && r.age === milestoneAge) {
+                  lines.push(`Returns Earned: +${formatINR(r.returns)}`);
+                  
+                  if (r.milestoneOutflow > 0) {
                     lines.push(`★ Milestone Outflow: -${formatINR(r.milestoneOutflow)}`);
                   }
+                  
+                  lines.push(`Ending Balance: ${formatINR(r.totalValue)}`);
+                  lines.push(`Real Value (Today's ₹): ${formatINR(r.realValue)}`);
                   
                   return lines;
                 }
               }
             }
           }
-        }
+        },
+        plugins: [phaseBackgroundsPlugin]
       });
     }
   }
