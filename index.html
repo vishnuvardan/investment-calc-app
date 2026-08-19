@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retirement & SWP Longevity Calculator</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Local Dependency Libraries -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/lucide.min.js"></script>
+  <script src="js/chart.min.js"></script>
+</head>
+<body>
+  
+  <div class="container">
+    
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="logo-container">
+        <h1>Longevity SWP Dashboard</h1>
+        <p>Interactive Retirement & Systematic Withdrawal Planner</p>
+      </div>
+      <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark/light theme">
+        <i data-lucide="sun" id="theme-icon-light" style="display: none;"></i>
+        <i data-lucide="moon" id="theme-icon-dark"></i>
+        <span id="theme-text">Dark Mode</span>
+      </button>
+    </header>
+
+    <div class="dashboard-grid">
+      
+      <!-- Left Panel: Slider Controls -->
+      <section class="panel-card">
+        <h2 class="panel-title">
+          <i data-lucide="sliders"></i> Simulation Parameters
+        </h2>
+        
+        <form id="calc-form" onsubmit="return false;">
+          
+          <!-- Section 1: Core Retirement Details -->
+          <h3 class="input-section-title">Core Retirement Details</h3>
+          
+          <!-- Parameter 1: Current Age -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="startAge-slider" class="input-label">
+                  Current Starting Age
+                </label>
+                <div class="input-label-subtitle">Age when simulation begins</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="startAge-input" data-id="startAge">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="startAge-slider" data-id="startAge" min="20" max="75" step="1" value="35">
+            </div>
+          </div>
+          
+          <!-- Parameter 2: Initial Corpus -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="initialCorpus-slider" class="input-label">
+                  Initial Corpus (₹)
+                </label>
+                <div class="input-label-subtitle">Starting retirement portfolio balance</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="initialCorpus-input" data-id="initialCorpus">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="initialCorpus-slider" data-id="initialCorpus" min="2500000" max="100000000" step="100000" value="10000000">
+            </div>
+          </div>
+
+          <!-- Parameter 3: Annual Living Expenses -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="annualExpenses-slider" class="input-label">
+                  Annual Expenses (₹)
+                  <span id="annualExpenses-monthly" class="input-label-subtitle" style="font-weight: 600; margin-left: 4px;"></span>
+                </label>
+                <div class="input-label-subtitle">Target expense rate in Year 1</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="annualExpenses-input" data-id="annualExpenses">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="annualExpenses-slider" data-id="annualExpenses" min="200000" max="3000000" step="25000" value="755000">
+            </div>
+          </div>
+
+          <!-- Section 2: Growth & Inflation Assumptions -->
+          <h3 class="input-section-title">Growth & Inflation</h3>
+          
+          <!-- Parameter 4: Annual Inflation Rate -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="inflationRate-slider" class="input-label">
+                  Annual Inflation Rate (%)
+                </label>
+                <div class="input-label-subtitle">Annual increase in living costs</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="inflationRate-input" data-id="inflationRate">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="inflationRate-slider" data-id="inflationRate" min="3.0" max="12.0" step="0.25" value="6.0">
+            </div>
+          </div>
+
+          <!-- Parameter 5: Expected Return -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="expectedReturn-slider" class="input-label">
+                  Expected Return (% p.a.)
+                </label>
+                <div class="input-label-subtitle">Compounding return on investment</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="expectedReturn-input" data-id="expectedReturn">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="expectedReturn-slider" data-id="expectedReturn" min="4.0" max="15.0" step="0.25" value="8.5">
+            </div>
+          </div>
+
+          <!-- Section 3: Milestones & Extra Income -->
+          <h3 class="input-section-title">Milestones & Side Income</h3>
+          
+          <!-- Parameter 6: Milestone Lump Sum -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="milestoneAmount-slider" class="input-label">
+                  Milestone Outflow (₹)
+                </label>
+                <div class="input-label-subtitle">One-time lump sum expense (e.g. child education)</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="milestoneAmount-input" data-id="milestoneAmount">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="milestoneAmount-slider" data-id="milestoneAmount" min="0" max="15000000" step="100000" value="5000000">
+            </div>
+          </div>
+
+          <!-- Parameter 7: Milestone Occurs At Age -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="milestoneAge-slider" class="input-label">
+                  Milestone Trigger Age
+                </label>
+                <div class="input-label-subtitle">Age when Milestone lump sum is spent</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="milestoneAge-input" data-id="milestoneAge">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="milestoneAge-slider" data-id="milestoneAge" min="36" max="75" step="1" value="45">
+            </div>
+          </div>
+
+          <!-- Parameter 8: Supplementary Monthly Income -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="sideIncome-slider" class="input-label">
+                  Side Income (₹ / month)
+                  <span id="sideIncome-annual" class="input-label-subtitle" style="font-weight: 600; margin-left: 4px;"></span>
+                </label>
+                <div class="input-label-subtitle">Side hustle / rental income during retirement</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="sideIncome-input" data-id="sideIncome">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="sideIncome-slider" data-id="sideIncome" min="0" max="200000" step="5000" value="0">
+            </div>
+          </div>
+
+          <!-- Parameter 9: Supplementary Income Duration -->
+          <div class="input-group">
+            <div class="input-label-container">
+              <div>
+                <label for="sideIncomeDuration-slider" class="input-label">
+                  Side Income Duration
+                </label>
+                <div class="input-label-subtitle">Years side income remains active</div>
+              </div>
+              <div class="input-badge-container">
+                <input type="text" class="text-input" id="sideIncomeDuration-input" data-id="sideIncomeDuration">
+              </div>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="sideIncomeDuration-slider" data-id="sideIncomeDuration" min="0" max="25" step="1" value="5">
+            </div>
+          </div>
+
+        </form>
+      </section>
+
+      <!-- Right Panel: Key Metrics, Chart, and Table -->
+      <main class="dashboard-right">
+        
+        <!-- Key Metric Cards Grid -->
+        <div class="metrics-grid">
+          
+          <!-- Card 1: Runway Longevity -->
+          <div class="metric-card" id="metric-longevity">
+            <div class="metric-header">
+              <span class="metric-title">Runway Longevity</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="hourglass"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-longevity">--</div>
+              <div class="metric-subtitle" id="sub-longevity">Active funded years</div>
+            </div>
+          </div>
+
+          <!-- Card 2: Depletion Age -->
+          <div class="metric-card" id="metric-depletion">
+            <div class="metric-header">
+              <span class="metric-title">Depletion Age</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="alert-circle" id="icon-depletion"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-depletion">--</div>
+              <div class="metric-subtitle" id="sub-depletion">Corpus depleted point</div>
+            </div>
+          </div>
+
+          <!-- Card 3: Peak Corpus Reached -->
+          <div class="metric-card" id="metric-peak">
+            <div class="metric-header">
+              <span class="metric-title">Peak Corpus</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="trending-up"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-peak">--</div>
+              <div class="metric-subtitle" id="sub-peak">Reached at Age --</div>
+            </div>
+          </div>
+
+          <!-- Card 4: Initial SWR -->
+          <div class="metric-card" id="metric-swr">
+            <div class="metric-header">
+              <span class="metric-title">Initial SWR</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="percent"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-swr">--</div>
+              <div class="metric-subtitle" id="sub-swr">Safe Withdrawal Rate</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Line Chart Panel -->
+        <section class="panel-card" style="margin-bottom: 24px;">
+          <h2 class="panel-title" style="margin-bottom: 12px; justify-content: space-between;">
+            <span><i data-lucide="line-chart"></i> Corpus Longevity Curve</span>
+            <span class="milestone-badge" id="chart-milestone-indicator" style="display:none;">Milestone Active</span>
+          </h2>
+          <div class="chart-container">
+            <canvas id="longevity-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Accordion Table -->
+        <section class="accordion-section">
+          <div class="accordion-header" id="table-toggle">
+            <h2 class="accordion-title">
+              <i data-lucide="table"></i> View Year-by-Year Financial Schedule
+            </h2>
+            <i data-lucide="chevron-down" class="accordion-icon"></i>
+          </div>
+          
+          <div class="accordion-body" id="table-body">
+            <div class="table-responsive">
+              <table class="financial-table">
+                <thead>
+                  <tr>
+                    <th class="text-center">Age</th>
+                    <th class="text-center">Year Index</th>
+                    <th class="num-col">Opening Corpus</th>
+                    <th class="num-col">Returns Earned</th>
+                    <th class="num-col">Total Expenses</th>
+                    <th class="num-col">Side Income</th>
+                    <th class="num-col">Milestone Outflow</th>
+                    <th class="num-col">Closing Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="financial-rows">
+                  <!-- JS generated rows go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Core Application Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>
