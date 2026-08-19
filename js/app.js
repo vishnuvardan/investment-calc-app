@@ -43,6 +43,9 @@ function parseINRInput(str) {
 }
 
 $(document).ready(function() {
+  // Shared active simulation results to prevent stale tooltip closure states
+  let chartData = [];
+
   // Initialize Lucide Icons
   lucide.createIcons();
 
@@ -311,6 +314,40 @@ $(document).ready(function() {
   }).on('keydown', function(e) {
     if (e.key === 'Enter') {
       $(this).blur();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault(); // prevent default cursor movement or scrolling
+      
+      const id = $(this).attr('data-id');
+      const config = inputsConfig[id];
+      const $slider = $(`#${id}-slider`);
+      const step = parseFloat($slider.attr('step')) || 1;
+      
+      let val = parseINRInput($(this).val());
+      
+      if (e.key === 'ArrowUp') {
+        val = Math.min(config.max, val + step);
+      } else {
+        val = Math.max(config.min, val - step);
+      }
+      
+      // Ensure decimal safety for percentages
+      if (config.type === 'percent') {
+        val = Math.round(val * 100) / 100;
+      }
+      
+      $(this).val(val);
+      $slider.val(val);
+      updateSliderTrack($slider);
+      
+      if (config.extraUpdate) {
+        config.extraUpdate(val);
+      }
+      
+      if (id === 'startAge') {
+        syncMilestoneAgeBounds();
+      }
+      
+      calculateAndRender(false);
     }
   });
 
@@ -500,7 +537,7 @@ $(document).ready(function() {
     const $tbody = $('#financial-rows');
     $tbody.empty();
     
-    results.forEach(r => {
+    for (const r of results) {
       let rowClass = '';
       let milestoneBadge = '';
       
@@ -526,12 +563,16 @@ $(document).ready(function() {
         </tr>
       `;
       $tbody.append(rowHtml);
-    });
+      
+      if (r.closing === 0) {
+        break;
+      }
+    }
   }
 
   function updateChart(results, startAge, depletionAge, milestoneAge, isMilestoneEnabled, status, fastUpdate) {
     // Stop plotting the line chart when it hits ₹0
-    let chartData = [];
+    chartData = [];
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
       chartData.push(r);
@@ -590,9 +631,6 @@ $(document).ready(function() {
       longevityChart.options.scales.x.ticks.color = labelColor;
       longevityChart.options.scales.y.grid.color = gridColor;
       longevityChart.options.scales.y.ticks.color = labelColor;
-      
-      // Store chartData on options context to read during tooltip callback
-      longevityChart.options.plugins.tooltip.externalData = chartData;
 
       // Drag updates use fast render mode
       longevityChart.update(fastUpdate ? 'none' : undefined);
@@ -622,6 +660,10 @@ $(document).ready(function() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
           scales: {
             x: {
               grid: {
@@ -673,19 +715,16 @@ $(document).ready(function() {
                 family: 'Inter',
                 size: 12
               },
-              externalData: chartData,
               callbacks: {
                 title: function(tooltipItems) {
                   const index = tooltipItems[0].dataIndex;
-                  const activeData = this.options.plugins.tooltip.externalData || chartData;
-                  const r = activeData[index];
+                  const r = chartData[index];
                   if (!r) return '';
                   return `Age ${r.age} (Year ${r.yearIndex})`;
                 },
                 label: function(context) {
                   const index = context.dataIndex;
-                  const activeData = this.options.plugins.tooltip.externalData || chartData;
-                  const r = activeData[index];
+                  const r = chartData[index];
                   if (!r) return [];
                   
                   const lines = [

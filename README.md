@@ -74,7 +74,7 @@ For each year index $t$:
 
 ## 🎛️ Input Controls & Default Values
 
-Every parameter is supported by a dual-interactive control: a smooth range slider and a badged text input box. The text inputs support raw numeric typing, commas, and multipliers (e.g. typing `1.5 Cr`, `50 L`, or `10000000` automatically parses and synchronizes the slider).
+Every parameter is supported by a dual-interactive control: a smooth range slider and a badged text input box. The text inputs support raw numeric typing, commas, multipliers (e.g. typing `1.5 Cr`, `50 L`, or `10000000` automatically parses and synchronizes the slider), and **ArrowUp/ArrowDown key accessibility** (pressing Up or Down arrow keys when a field is focused increments or decrements the value by the slider's step size in real time).
 
 | Parameter | Slider Bounds | Step Size | Default Value | Description |
 | :--- | :--- | :--- | :--- | :--- |
@@ -97,7 +97,7 @@ Every parameter is supported by a dual-interactive control: a smooth range slide
 - When loading a shared link, the dashboard automatically extracts the query values, validates them against bounds, adjusts the sliders, and renders the specific state instantly.
 
 ### 📈 Smart Visualization & Fast Update
-- **Interactive Chart.js Graph**: Draws the curve up to the depletion age. The line and fill gradients dynamically shift colors based on safety boundaries:
+- **Interactive Chart.js Graph**: Draws the curve up to the depletion age. The line and fill gradients dynamically shift colors based on safety boundaries. Configured with index-mode vertical tracking (`intersect: false, mode: 'index'`) so that hover tooltips showing money values display immediately as the mouse moves horizontally across the canvas (no need to trace invisible dots precisely).
   - **Green** if the corpus is sustained past age 85 (or is lifelong).
   - **Orange** if it depletes between age 70 and 84.
   - **Red** if it depletes before age 70.
@@ -106,7 +106,8 @@ Every parameter is supported by a dual-interactive control: a smooth range slide
 
 ### 📋 Collapsible Financial Schedule
 - Renders an accordion table detailing year-by-year changes (Opening, Returns, Expenses, Side Income, Milestones, and Closing).
-- Rows are stylized: milestones highlighted in indigo, the exact depletion year in high-contrast red, and subsequent depleted years faded out. All numbers are localized using `Intl.NumberFormat('en-IN')`.
+- **Depletion Point Bounded**: To keep the schedule clean and highly readable, the table dynamically terminates immediately after the closing balance hits ₹0 (the exact depletion year). Subsequent years (which would display only zeros for all fields) are automatically truncated and omitted.
+- Rows are stylized: milestones highlighted in indigo and the exact depletion year in high-contrast red. All numbers are localized using `Intl.NumberFormat('en-IN')`.
 
 ---
 
