@@ -127,7 +127,7 @@ A shared navigation header is integrated into both pages under the **"FIRE & Wea
 
 ## 📈 SIP Wealth Builder & Compound growth Calculator (`sip-calculator.html`)
 
-This tool projects compound interest accumulation month-by-month over a set horizon, accounting for annual step-up rates and inflation.
+This tool projects compound interest accumulation month-by-month over a set horizon, accounting for annual step-up rates and inflation, and extends the projection timeline until the user reaches the age of 90.
 
 ### Math Compounding Progression
 For each year $y$:
@@ -139,6 +139,7 @@ For each year $y$:
   $$\text{Real Value}_y = \frac{\text{Nominal Balance}_y}{(1 + \text{Inflation})^y}$$
 
 ### Features
+* **Age-90 Projection Horizon**: Projections calculate compounding wealth until age 90. After the active investment horizon is reached, contributions stop while the accumulated balance compounds continuously.
 * **Double-Layer Stacked Area Plot**: Renders the principal invested capital (blue area) and the compound interest returns/wealth gained (emerald area) stacked.
 * **Inflation Adjustment KPI**: Highlights today's purchasing power equivalents at custom inflation rates.
 * **Interactive Tooltips & Key Controls**: Custom text formatting (Lakhs/Crores), arrow-key adjustments, and real-time query parameter state-saving.

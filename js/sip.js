@@ -49,6 +49,14 @@ $(document).ready(function() {
 
   // Definition of parameters configuration
   const inputsConfig = {
+    startAge: {
+      id: 'startAge',
+      type: 'int',
+      default: 35,
+      min: 20,
+      max: 75,
+      formatter: val => `${val} Years`
+    },
     initialLumpsum: {
       id: 'initialLumpsum',
       type: 'currency',
@@ -114,6 +122,31 @@ $(document).ready(function() {
     );
   }
 
+  // Dynamically compute boundary constraints for Investment Horizon based on startAge
+  function syncInvestmentHorizonBounds() {
+    const startAge = parseInt($('#startAge-slider').val());
+    const maxHorizon = Math.max(1, 90 - startAge);
+    const $horizonSlider = $('#investmentYears-slider');
+    const $horizonInput = $('#investmentYears-input');
+    
+    let currentHorizon = parseInt($horizonSlider.val());
+    
+    // Set slider max attribute
+    $horizonSlider.attr('max', maxHorizon);
+    inputsConfig.investmentYears.max = maxHorizon;
+    
+    // Adjust if current value exceeds the max
+    if (currentHorizon > maxHorizon) {
+      currentHorizon = maxHorizon;
+      $horizonSlider.val(currentHorizon);
+      if (!$horizonInput.is(':focus')) {
+        $horizonInput.val(inputsConfig.investmentYears.formatter(currentHorizon));
+      }
+    }
+    
+    updateSliderTrack($horizonSlider);
+  }
+
   // Initialize all input UI controls
   function initInputs() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -139,6 +172,9 @@ $(document).ready(function() {
       
       updateSliderTrack($slider);
     });
+    
+    // Dynamically compute initial boundaries
+    syncInvestmentHorizonBounds();
   }
 
   // Update URL Query parameters with current parameter values, preserving other pages' parameters
@@ -168,6 +204,10 @@ $(document).ready(function() {
     // Update numerical badge text box (while user is sliding)
     $(`#${id}-input`).val(config.formatter(val));
     updateSliderTrack($(this));
+    
+    if (id === 'startAge') {
+      syncInvestmentHorizonBounds();
+    }
     
     // Update dashboard calculations with fast render (disable animation lag)
     calculateAndRender(true);
@@ -201,6 +241,10 @@ $(document).ready(function() {
     
     $(this).val(config.formatter(val));
     
+    if (id === 'startAge') {
+      syncInvestmentHorizonBounds();
+    }
+    
     calculateAndRender(false); // full redraw on edit end
   }).on('keydown', function(e) {
     if (e.key === 'Enter') {
@@ -229,6 +273,10 @@ $(document).ready(function() {
       $(this).val(val);
       $slider.val(val);
       updateSliderTrack($slider);
+      
+      if (id === 'startAge') {
+        syncInvestmentHorizonBounds();
+      }
       
       calculateAndRender(false);
     }
@@ -266,22 +314,36 @@ $(document).ready(function() {
     const expectedReturn = parseFloat($('#expectedReturn-slider').val()) / 100;
     const investmentYears = parseInt($('#investmentYears-slider').val());
     const inflationRate = parseFloat($('#inflationRate-slider').val()) / 100;
+    const startAge = parseInt($('#startAge-slider').val());
 
     let results = [];
     let balance = initialLumpsum;
     let totalInvested = initialLumpsum;
     let r = expectedReturn / 12; // monthly rate
+    
+    // Project until age 90
+    const maxAge = 90;
+    const totalYears = Math.max(1, maxAge - startAge);
 
     // Month-by-month projection
-    for (let y = 1; y <= investmentYears; y++) {
+    for (let y = 1; y <= totalYears; y++) {
       let yearlyContribution = 0;
-      // SIP amount for this year (adjusted for Step-Up compound rate)
-      const monthlySipAmount = monthlySip * Math.pow(1 + stepUpRate, y - 1);
-
-      for (let m = 1; m <= 12; m++) {
-        balance = (balance + monthlySipAmount) * (1 + r);
-        totalInvested += monthlySipAmount;
-        yearlyContribution += monthlySipAmount;
+      let monthlySipAmount = 0;
+      
+      if (y <= investmentYears) {
+        // Active Contribution Period (adjusted for step-up rate compounded annually)
+        monthlySipAmount = monthlySip * Math.pow(1 + stepUpRate, y - 1);
+        for (let m = 1; m <= 12; m++) {
+          balance = (balance + monthlySipAmount) * (1 + r);
+          totalInvested += monthlySipAmount;
+          yearlyContribution += monthlySipAmount;
+        }
+      } else {
+        // SIP Contributions have stopped, but existing corpus continues to compound monthly
+        monthlySipAmount = 0;
+        for (let m = 1; m <= 12; m++) {
+          balance = balance * (1 + r);
+        }
       }
 
       const totalValue = balance;
@@ -292,6 +354,7 @@ $(document).ready(function() {
 
       results.push({
         year: y,
+        age: startAge + y,
         monthlySip: monthlySipAmount,
         yearlyContribution: yearlyContribution,
         totalInvested: totalInvested,
@@ -331,8 +394,8 @@ $(document).ready(function() {
     for (const r of results) {
       const rowHtml = `
         <tr>
-          <td class="text-center" style="font-weight: 600;">Year ${r.year}</td>
-          <td class="text-center text-muted">${formatINR(r.monthlySip)}</td>
+          <td class="text-center" style="font-weight: 600;">Age ${r.age} (Year ${r.year})</td>
+          <td class="text-center text-muted">${r.monthlySip > 0 ? formatINR(r.monthlySip) : '<span style="opacity: 0.6; font-style: italic;">Stopped</span>'}</td>
           <td class="num-col">${formatINR(r.yearlyContribution)}</td>
           <td class="num-col text-accent">${formatINR(r.totalInvested)}</td>
           <td class="num-col text-safe">+${formatINR(r.wealthGained)}</td>
@@ -347,7 +410,7 @@ $(document).ready(function() {
   function updateChart(results, fastUpdate) {
     chartData = results;
 
-    const labels = results.map(r => `Year ${r.year}`);
+    const labels = results.map(r => `Age ${r.age}`);
     const investedValues = results.map(r => r.totalInvested);
     const returnsValues = results.map(r => r.wealthGained);
 
@@ -501,7 +564,7 @@ $(document).ready(function() {
                     `----------------------------`,
                     `Total Wealth: ${formatINR(r.totalValue)}`,
                     `Real Purchasing Power: ${formatINR(r.realValue)}`,
-                    `Yearly SIP Contribution: ${formatINR(r.monthlySip * 12)}/yr`
+                    r.monthlySip > 0 ? `Yearly SIP Contribution: ${formatINR(r.monthlySip * 12)}/yr` : 'SIP Contribution: Stopped'
                   ].join('\n');
                 }
               }
