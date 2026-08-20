@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy vs. Rent Real Estate Showdown Simulator</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Local Dependency Libraries -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/lucide.min.js"></script>
+  <script src="js/chart.min.js"></script>
+</head>
+<body>
+  
+  <div class="container">
+    
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="logo-container">
+        <div class="brand-wrapper">
+          <i data-lucide="trending-up"></i>
+          <h1>FIRE & Wealth Tools</h1>
+        </div>
+        <p>Does buying a home build more wealth, or does renting and investing the difference win?</p>
+      </div>
+      
+      <div class="header-actions">
+        <nav class="nav-links">
+          <a href="index.html" class="nav-link">
+            <i data-lucide="activity"></i> Master Planner (SIP + SWP)
+          </a>
+          <a href="anti-emi.html" class="nav-link">
+            <i data-lucide="calculator"></i> Anti-EMI Calculator
+          </a>
+          <a href="buy-vs-rent.html" class="nav-link active">
+            <i data-lucide="home"></i> Buy vs Rent Simulator
+          </a>
+        </nav>
+        
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark/light theme">
+          <i data-lucide="sun" id="theme-icon-light" style="display: none;"></i>
+          <i data-lucide="moon" id="theme-icon-dark"></i>
+          <span id="theme-text">Dark Mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="panel-card" style="margin-bottom: 24px; padding: 20px; background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.15);">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="background: rgba(99, 102, 241, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-color); flex-shrink: 0;">
+          <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--text-primary);">Buy vs. Rent Real Estate Simulator</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4;">
+            The ultimate 20–30 year net worth showdown: Does buying a home build more wealth, or does renting and investing the difference into equity win?
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div class="dashboard-grid">
+      
+      <!-- Left Panel: Slider Controls (40% Width) -->
+      <section class="panel-card" style="padding: 16px; background: transparent; border: none; box-shadow: none;">
+        <h2 class="panel-title" style="margin-bottom: 16px; padding-left: 8px;">
+          <i data-lucide="sliders"></i> Simulator Parameters
+        </h2>
+        
+        <form id="calc-form" onsubmit="return false;">
+          
+          <!-- Section A: Property & Loan Inputs (The "Buy" Side) -->
+          <div class="accordion-section" style="margin-bottom: 16px;">
+            <div class="accordion-header open" data-section="buy-inputs">
+              <h3 class="accordion-title" style="margin: 0; font-size: 14px; font-weight: 600;">
+                <i data-lucide="home"></i> Property & Loan Inputs (Buy Side)
+              </h3>
+              <i data-lucide="chevron-down" class="accordion-icon"></i>
+            </div>
+            
+            <div class="accordion-body" style="padding: 16px; display: block;">
+              <!-- Property Purchase Price -->
+              <div class="input-group">
+                <div class="input-label-container">
+                  <div>
+                    <label for="propertyPrice-slider" class="input-label">Property Purchase Price (₹)</label>
+                    <div class="input-label-subtitle">Base cost of the home</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="propertyPrice-input" data-id="propertyPrice">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="propertyPrice-slider" data-id="propertyPrice" min="2000000" max="100000000" step="100000" value="10000000">
+                </div>
+              </div>
+
+              <!-- Down Payment -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="downPaymentPercent-slider" class="input-label">
+                      Down Payment (%)
+                      <span id="downPaymentValue-badge" class="input-label-subtitle" style="font-weight: 600; margin-left: 4px; color: var(--accent-light);"></span>
+                    </label>
+                    <div class="input-label-subtitle">Paid upfront in cash</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="downPaymentPercent-input" data-id="downPaymentPercent">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="downPaymentPercent-slider" data-id="downPaymentPercent" min="10" max="50" step="5" value="20">
+                </div>
+              </div>
+
+              <!-- Registration, Stamp Duty & Setup -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="registrationPercent-slider" class="input-label">
+                      Registration & Setup (%)
+                      <span id="registrationValue-badge" class="input-label-subtitle" style="font-weight: 600; margin-left: 4px; color: var(--accent-light);"></span>
+                    </label>
+                    <div class="input-label-subtitle">Stamp duty, interior setup, etc.</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="registrationPercent-input" data-id="registrationPercent">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="registrationPercent-slider" data-id="registrationPercent" min="0" max="15" step="0.5" value="7.0">
+                </div>
+              </div>
+
+              <!-- Home Loan Interest Rate -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="loanInterestRate-slider" class="input-label">Home Loan Interest Rate (% p.a.)</label>
+                    <div class="input-label-subtitle">Annual loan interest rate</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="loanInterestRate-input" data-id="loanInterestRate">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="loanInterestRate-slider" data-id="loanInterestRate" min="6.0" max="14.0" step="0.25" value="8.5">
+                </div>
+              </div>
+
+              <!-- Home Loan Tenure -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="loanTenure-slider" class="input-label">
+                      Home Loan Tenure (Years)
+                      <span id="loanEmi-badge" class="input-label-subtitle" style="font-weight: 600; margin-left: 4px; color: var(--accent-light);"></span>
+                    </label>
+                    <div class="input-label-subtitle">Duration of loan amortization</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="loanTenure-input" data-id="loanTenure">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="loanTenure-slider" data-id="loanTenure" min="5" max="30" step="1" value="20">
+                </div>
+              </div>
+
+              <!-- Expected Property price appreciation -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="propertyAppreciation-slider" class="input-label">Property Appreciation (% p.a.)</label>
+                    <div class="input-label-subtitle">Expected home value increase rate</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="propertyAppreciation-input" data-id="propertyAppreciation">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="propertyAppreciation-slider" data-id="propertyAppreciation" min="2.0" max="12.0" step="0.25" value="6.0">
+                </div>
+              </div>
+
+              <!-- Annual Maintenance & Tax -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="maintenancePercent-slider" class="input-label">
+                      Annual Maintenance & Tax (%)
+                      <span id="maintenanceValue-badge" class="input-label-subtitle" style="font-weight: 600; margin-left: 4px; color: var(--accent-light);"></span>
+                    </label>
+                    <div class="input-label-subtitle">Percent of current home value</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="maintenancePercent-input" data-id="maintenancePercent">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="maintenancePercent-slider" data-id="maintenancePercent" min="0.2" max="3.0" step="0.1" value="1.0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section B: Rental Inputs (The "Rent" Side) -->
+          <div class="accordion-section" style="margin-bottom: 16px;">
+            <div class="accordion-header open" data-section="rent-inputs">
+              <h3 class="accordion-title" style="margin: 0; font-size: 14px; font-weight: 600;">
+                <i data-lucide="key"></i> Rental Inputs (Rent Side)
+              </h3>
+              <i data-lucide="chevron-down" class="accordion-icon"></i>
+            </div>
+            
+            <div class="accordion-body" style="padding: 16px; display: block;">
+              <!-- Initial Monthly Rent -->
+              <div class="input-group">
+                <div class="input-label-container">
+                  <div>
+                    <label for="initialRent-slider" class="input-label">Initial Monthly Rent (₹)</label>
+                    <div class="input-label-subtitle">Rent for equivalent home</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="initialRent-input" data-id="initialRent">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="initialRent-slider" data-id="initialRent" min="5000" max="300000" step="1000" value="30000">
+                </div>
+              </div>
+
+              <!-- Rent Escalation Rate -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="rentEscalation-slider" class="input-label">Annual Rent Escalation (% p.a.)</label>
+                    <div class="input-label-subtitle">Yearly rent growth rate</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="rentEscalation-input" data-id="rentEscalation">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="rentEscalation-slider" data-id="rentEscalation" min="0.0" max="12.0" step="0.5" value="5.0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section C: Investment & Simulation Horizon -->
+          <div class="accordion-section" style="margin-bottom: 16px;">
+            <div class="accordion-header open" data-section="investment-inputs">
+              <h3 class="accordion-title" style="margin: 0; font-size: 14px; font-weight: 600;">
+                <i data-lucide="trending-up"></i> Investment & Horizon
+              </h3>
+              <i data-lucide="chevron-down" class="accordion-icon"></i>
+            </div>
+            
+            <div class="accordion-body" style="padding: 16px; display: block;">
+              <!-- Expected Equity Return -->
+              <div class="input-group">
+                <div class="input-label-container">
+                  <div>
+                    <label for="equityReturn-slider" class="input-label">Expected Equity Return (% p.a.)</label>
+                    <div class="input-label-subtitle">Investment growth rate (SIP/Mutual Fund)</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="equityReturn-input" data-id="equityReturn">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="equityReturn-slider" data-id="equityReturn" min="6.0" max="18.0" step="0.25" value="12.0">
+                </div>
+              </div>
+
+              <!-- Simulation Horizon -->
+              <div class="input-group" style="margin-top: 16px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="simulationHorizon-slider" class="input-label">Simulation Horizon (Years)</label>
+                    <div class="input-label-subtitle">Showdown simulation years</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="simulationHorizon-input" data-id="simulationHorizon">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="simulationHorizon-slider" data-id="simulationHorizon" min="5" max="40" step="1" value="25">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </section>
+
+      <!-- Right Panel: Key Metrics, Chart, and Table (60% Width) -->
+      <main class="dashboard-right">
+        
+        <!-- Key Metric Cards Grid -->
+        <div class="metrics-grid">
+          
+          <!-- Card 1: The Verdict Banner -->
+          <div class="metric-card" id="metric-verdict">
+            <div class="metric-header">
+              <span class="metric-title">Simulation Verdict</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="award"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-verdict" style="font-size: 1.15rem; font-weight: 700; line-height: 1.2; word-break: break-word;">--</div>
+              <div class="metric-subtitle" id="sub-verdict">Winner over horizon</div>
+            </div>
+          </div>
+  
+          <!-- Card 2: Buyer Net Worth (at End of Horizon) -->
+          <div class="metric-card" id="metric-buyer-networth">
+            <div class="metric-header">
+              <span class="metric-title">Buyer Net Worth</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="home"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-buyer-networth">--</div>
+              <div class="metric-subtitle" id="sub-buyer-networth">100% Real Estate</div>
+            </div>
+          </div>
+
+          <!-- Card 3: Renter Net Worth (at End of Horizon) -->
+          <div class="metric-card" id="metric-renter-networth">
+            <div class="metric-header">
+              <span class="metric-title">Renter Net Worth</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="trending-up"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-renter-networth">--</div>
+              <div class="metric-subtitle" id="sub-renter-networth">100% Liquid Equities</div>
+            </div>
+          </div>
+
+          <!-- Card 4: Monthly Outflow Comparison -->
+          <div class="metric-card" id="metric-outflow-comparison">
+            <div class="metric-header">
+              <span class="metric-title">Initial Outflows (mo)</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="arrow-up-right"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-outflow-comparison" style="font-size: 0.95rem;">--</div>
+              <div class="metric-subtitle" id="sub-outflow-comparison">EMI + Maint vs. Rent</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Line Chart Panel -->
+        <section class="panel-card" style="margin-bottom: 24px;">
+          <h2 class="panel-title" style="margin-bottom: 12px; justify-content: space-between;">
+            <span><i data-lucide="line-chart"></i> Net Worth Progression Showdown</span>
+            <span class="milestone-badge" id="crossover-badge" style="display:none; background: var(--safe-bg); color: var(--safe-color); border: 1px solid var(--safe-color);">Crossover Year: --</span>
+          </h2>
+          <div class="chart-container">
+            <canvas id="showdown-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Accordion Table -->
+        <section class="accordion-section">
+          <div class="accordion-header" id="table-toggle">
+            <h2 class="accordion-title">
+              <i data-lucide="table"></i> View Detailed Annual Cash Flow & Balance Sheet
+            </h2>
+            <i data-lucide="chevron-down" class="accordion-icon"></i>
+          </div>
+          
+          <div class="accordion-body" id="table-body">
+            <div class="table-responsive">
+              <table class="financial-table">
+                <thead>
+                  <tr>
+                    <th class="text-center">Year</th>
+                    <th class="num-col">Property Value</th>
+                    <th class="num-col">Loan Balance</th>
+                    <th class="num-col">Buyer Net Worth</th>
+                    <th class="num-col">Rent Paid (Yr)</th>
+                    <th class="num-col">Net Invested (Yr)</th>
+                    <th class="num-col">Renter Portfolio</th>
+                    <th class="num-col">Net Worth Delta</th>
+                  </tr>
+                </thead>
+                <tbody id="financial-rows">
+                  <!-- JS generated rows go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Buy vs. Rent Application Logic -->
+  <script src="js/buy-vs-rent.js"></script>
+</body>
+</html>
