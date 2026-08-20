@@ -107,8 +107,24 @@ $(document).ready(function() {
       type: 'currency',
       default: 7000,
       min: 500,
-      max: 5000000,
+      max: 50000000,
       formatter: val => formatINR(val, false)
+    },
+    targetDuration: {
+      id: 'targetDuration',
+      type: 'int',
+      default: 4,
+      min: 1,
+      max: 120,
+      formatter: val => {
+        if (val < 12) {
+          return `${val} Month${val > 1 ? 's' : ''}`;
+        } else {
+          const yrs = val / 12;
+          const formattedYrs = yrs % 1 === 0 ? yrs.toFixed(0) : yrs.toFixed(2).replace(/\.00$/, '');
+          return `${val} Months (${formattedYrs} Yr${yrs > 1 ? 's' : ''})`;
+        }
+      }
     },
     expectedRoi: {
       id: 'expectedRoi',
@@ -120,7 +136,7 @@ $(document).ready(function() {
     }
   };
 
-  // Helper date formatter
+  // Helper date formatter (kept for display if needed)
   function formatDateYYYYMMDD(d) {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -128,27 +144,28 @@ $(document).ready(function() {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // Initialize input dates
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const defaultDate = new Date(today);
-  defaultDate.setMonth(today.getMonth() + 4);
-
-  $('#targetDate-input').attr('min', formatDateYYYYMMDD(tomorrow));
-  
   // Set default values from URL params or fallback to config defaults
   function initInputs() {
     const urlParams = new URLSearchParams(window.location.search);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // Init targetCost and expectedRoi
     Object.keys(inputsConfig).forEach(key => {
       const config = inputsConfig[key];
       const $slider = $(`#${key}-slider`);
       const $input = $(`#${key}-input`);
       
       let val = config.default;
-      if (urlParams.has(key)) {
+      
+      // Backward compatibility: convert targetDate to duration in months
+      if (key === 'targetDuration' && urlParams.has('targetDate')) {
+        const paramDate = new Date(urlParams.get('targetDate'));
+        if (!isNaN(paramDate.getTime()) && paramDate > today) {
+          const diffTime = paramDate.getTime() - today.getTime();
+          const months = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24 * 30.4375)));
+          val = Math.max(config.min, Math.min(config.max, months));
+        }
+      } else if (urlParams.has(key)) {
         const parsed = parseFloat(urlParams.get(key));
         if (!isNaN(parsed)) {
           val = Math.max(config.min, Math.min(config.max, parsed));
@@ -159,18 +176,6 @@ $(document).ready(function() {
       $input.val(config.formatter(val));
       updateSliderTrack($slider);
     });
-
-    // Init Target Purchase Date
-    if (urlParams.has('targetDate')) {
-      const paramDate = new Date(urlParams.get('targetDate'));
-      if (!isNaN(paramDate.getTime()) && paramDate >= tomorrow) {
-        $('#targetDate-input').val(urlParams.get('targetDate'));
-      } else {
-        $('#targetDate-input').val(formatDateYYYYMMDD(defaultDate));
-      }
-    } else {
-      $('#targetDate-input').val(formatDateYYYYMMDD(defaultDate));
-    }
   }
 
   // Retain parameters when navigating back to Master Planner
@@ -180,7 +185,7 @@ $(document).ready(function() {
     const params = new URLSearchParams(window.location.search);
     
     params.set('targetCost', $('#targetCost-slider').val());
-    params.set('targetDate', $('#targetDate-input').val());
+    params.set('targetDuration', $('#targetDuration-slider').val());
     params.set('expectedRoi', $('#expectedRoi-slider').val());
     
     window.location.href = href + '?' + params.toString();
@@ -253,15 +258,6 @@ $(document).ready(function() {
     }
   });
 
-  // Target Date Change handler
-  $('#targetDate-input').on('change', function() {
-    let dateVal = new Date($(this).val());
-    if (isNaN(dateVal.getTime()) || dateVal < tomorrow) {
-      $(this).val(formatDateYYYYMMDD(tomorrow));
-    }
-    calculateAndRender(false);
-  });
-
   // Frequency Tab clicks
   $('.freq-tab').on('click', function() {
     if ($(this).attr('disabled')) return;
@@ -273,20 +269,22 @@ $(document).ready(function() {
 
   function calculateAndRender(fastUpdate = false) {
     const targetCost = parseFloat($('#targetCost-slider').val());
-    const targetDateVal = $('#targetDate-input').val();
+    const targetDuration = parseInt($('#targetDuration-slider').val());
     const roi = parseFloat($('#expectedRoi-slider').val());
     const roiRate = roi / 100;
 
     const todayDate = new Date();
     todayDate.setHours(0, 0, 0, 0);
-    const targetDate = new Date(targetDateVal);
-    targetDate.setHours(0, 0, 0, 0);
+
+    // Calculate virtual target date by adding targetDuration months to today
+    const targetDate = new Date(todayDate);
+    targetDate.setMonth(todayDate.getMonth() + targetDuration);
 
     const diffTime = targetDate.getTime() - todayDate.getTime();
     // Total days (exact count)
     const D = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)));
     const W = D / 7;
-    const M = D / 30.4375;
+    const M = targetDuration;
     const Y = D / 365.25;
 
     // Format target date for display
@@ -387,7 +385,7 @@ $(document).ready(function() {
     $('#val-win').html('You save ~<strong>' + formatINR(netWin) + '</strong> just by planning ahead!');
 
     // Update URL Query parameters
-    updateURLQueryParams(targetCost, targetDateVal, roi);
+    updateURLQueryParams(targetCost, targetDuration, roi);
 
     // Refresh Lucide Icons
     lucide.createIcons();
@@ -399,10 +397,11 @@ $(document).ready(function() {
     renderChart(targetCost, fastUpdate);
   }
 
-  function updateURLQueryParams(targetCost, targetDateVal, roi) {
+  function updateURLQueryParams(targetCost, targetDuration, roi) {
     const params = new URLSearchParams(window.location.search);
     params.set('targetCost', targetCost);
-    params.set('targetDate', targetDateVal);
+    params.set('targetDuration', targetDuration);
+    params.delete('targetDate');
     params.set('expectedRoi', roi);
     
     const newUrl = `${window.location.pathname}?${params.toString()}`;
