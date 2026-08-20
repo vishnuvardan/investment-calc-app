@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Anti-EMI / Reverse EMI Calculator</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Local Dependency Libraries -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/lucide.min.js"></script>
+  <script src="js/chart.min.js"></script>
+</head>
+<body>
+  
+  <div class="container">
+    
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="logo-container">
+        <div class="brand-wrapper">
+          <i data-lucide="trending-up"></i>
+          <h1>FIRE & Wealth Tools</h1>
+        </div>
+        <p>Why pay bank interest when compounding can buy your toys for you?</p>
+      </div>
+      
+      <div class="header-actions">
+        <nav class="nav-links">
+          <a href="index.html" class="nav-link">
+            <i data-lucide="activity"></i> Master Planner (SIP + SWP)
+          </a>
+          <a href="anti-emi.html" class="nav-link active">
+            <i data-lucide="calculator"></i> Anti-EMI Calculator
+          </a>
+        </nav>
+        
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark/light theme">
+          <i data-lucide="sun" id="theme-icon-light" style="display: none;"></i>
+          <i data-lucide="moon" id="theme-icon-dark"></i>
+          <span id="theme-text">Dark Mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Banner (Tagline) -->
+    <section class="panel-card" style="margin-bottom: 24px; padding: 20px; background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.15);">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="background: rgba(99, 102, 241, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-color); flex-shrink: 0;">
+          <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--text-primary);">The Anti-EMI Calculator</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4;">
+            Why pay bank interest on credit card EMIs when compounding can buy your toys for you? Save first, let debt funds pay the discount, flex later.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div class="dashboard-grid">
+      
+      <!-- Left Panel: Slider Controls (40% Width) -->
+      <section class="panel-card" style="padding: 16px; background: transparent; border: none; box-shadow: none;">
+        <h2 class="panel-title" style="margin-bottom: 16px; padding-left: 8px;">
+          <i data-lucide="sliders"></i> Calculator Inputs
+        </h2>
+        
+        <form id="calc-form" onsubmit="return false;">
+          
+          <div class="accordion-section" style="margin-bottom: 16px;">
+            <div class="accordion-header open" data-section="inputs" style="cursor: default;">
+              <h3 class="accordion-title" style="margin: 0; font-size: 14px; font-weight: 600;">
+                <i data-lucide="settings"></i> Target Details & ROI
+              </h3>
+            </div>
+            
+            <div class="accordion-body" style="padding: 16px; display: block;">
+              
+              <!-- Target Cost (₹) -->
+              <div class="input-group">
+                <div class="input-label-container">
+                  <div>
+                    <label for="targetCost-slider" class="input-label">Target Cost (₹)</label>
+                    <div class="input-label-subtitle">Total cost of your purchase</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="targetCost-input" data-id="targetCost">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="targetCost-slider" data-id="targetCost" min="500" max="5000000" step="500" value="7000">
+                </div>
+              </div>
+
+              <!-- Target Purchase Date -->
+              <div class="input-group" style="margin-top: 20px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="targetDate-input" class="input-label">Target Purchase Date</label>
+                    <div class="input-label-subtitle">When do you want to buy this?</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="date" class="text-input" id="targetDate-input" data-id="targetDate" style="text-align: left; width: 160px; font-weight: 500;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Expected ROI (% p.a.) -->
+              <div class="input-group" style="margin-top: 20px;">
+                <div class="input-label-container">
+                  <div>
+                    <label for="expectedRoi-slider" class="input-label">
+                      Expected ROI (% p.a.)
+                      <span class="help-tooltip" title="Assuming parking in liquid, arbitrage, or short-term debt mutual funds" style="margin-left: 4px; vertical-align: middle;">
+                        <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i>
+                      </span>
+                    </label>
+                    <div class="input-label-subtitle">Debt / liquid fund return rate</div>
+                  </div>
+                  <div class="input-badge-container">
+                    <input type="text" class="text-input" id="expectedRoi-input" data-id="expectedRoi">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="expectedRoi-slider" data-id="expectedRoi" min="0.00" max="15.00" step="0.25" value="8.00">
+                </div>
+              </div>
+              
+            </div>
+          </div>
+
+        </form>
+      </section>
+
+      <!-- Right Panel: Key Metrics, Chart, and Comparison (60% Width) -->
+      <main class="dashboard-right">
+        
+        <!-- Frequency Toggle Tabs -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <span style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text-secondary);">Deposit Frequency</span>
+          <div class="nav-links" id="freq-tabs" style="display: flex; gap: 4px; padding: 4px; border-radius: 10px;">
+            <button class="nav-link freq-tab" data-freq="daily" style="background: transparent; border: none; cursor: pointer; outline: none; font-family: inherit;">
+              Daily
+            </button>
+            <button class="nav-link freq-tab" data-freq="weekly" style="background: transparent; border: none; cursor: pointer; outline: none; font-family: inherit;">
+              Weekly
+            </button>
+            <button class="nav-link freq-tab active" data-freq="monthly" style="background: transparent; border: none; cursor: pointer; outline: none; font-family: inherit;">
+              Monthly
+            </button>
+            <button class="nav-link freq-tab" data-freq="yearly" style="background: transparent; border: none; cursor: pointer; outline: none; font-family: inherit;">
+              Yearly
+            </button>
+          </div>
+        </div>
+
+        <!-- Key Metric Cards Grid -->
+        <div class="metrics-grid">
+          
+          <!-- Card 1: Deposit Hero Card -->
+          <div class="metric-card" id="metric-deposit" style="grid-column: span 2; border-color: rgba(99, 102, 241, 0.3); box-shadow: var(--glass-reflection), var(--card-shadow), var(--card-glow-accent);">
+            <div class="metric-header">
+              <span class="metric-title" id="deposit-card-title">Reverse EMI Deposit</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="wallet"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-deposit" style="font-size: 1.8rem; color: var(--accent-light);">₹--</div>
+              <div class="metric-subtitle" id="sub-deposit">For the next -- periods until --</div>
+            </div>
+          </div>
+  
+          <!-- Card 2: Time Remaining -->
+          <div class="metric-card" id="metric-time">
+            <div class="metric-header">
+              <span class="metric-title">Time Remaining</span>
+              <div class="metric-icon-wrapper">
+                <i data-lucide="clock"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value" id="val-time" style="font-size: 1.25rem;">--</div>
+              <div class="metric-subtitle" id="sub-time">Target timeline duration</div>
+            </div>
+          </div>
+
+          <!-- Card 3: Free Compounding Bonus -->
+          <div class="metric-card status-safe" id="metric-bonus">
+            <div class="metric-header">
+              <span class="metric-title">Compounding Bonus</span>
+              <div class="metric-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--safe-color);">
+                <i data-lucide="gift"></i>
+              </div>
+            </div>
+            <div>
+              <div class="metric-value text-safe" id="val-bonus">₹--</div>
+              <div class="metric-subtitle" id="sub-bonus">Free returns earned</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Line Chart Panel -->
+        <section class="panel-card" style="margin-bottom: 24px;">
+          <h2 class="panel-title" style="margin-bottom: 12px; justify-content: space-between;">
+            <span><i data-lucide="line-chart"></i> Sinking Fund Accumulation Curve</span>
+            <span class="milestone-badge" id="chart-roi-indicator" style="font-size: 0.75rem;">ROI Active</span>
+          </h2>
+          <div class="chart-container">
+            <canvas id="anti-emi-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Credit Card Trap vs. Anti-EMI Comparison Box -->
+        <div class="panel-card" style="margin-bottom: 24px;">
+          <h2 class="panel-title" style="margin-bottom: 16px;">
+            <i data-lucide="arrow-right-left"></i> Credit Card Trap vs. Anti-EMI Comparison
+          </h2>
+          
+          <div style="display: grid; grid-template-columns: 1fr; gap: 16px;" id="comparison-row">
+            <!-- Credit Card Option -->
+            <div style="background: var(--danger-bg); border: 1px solid rgba(239, 68, 68, 0.2); padding: 16px; border-radius: 12px;">
+              <h3 style="font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600; color: var(--danger-color); display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <i data-lucide="credit-card"></i> Credit Card EMI Route
+              </h3>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px;">
+                Typical 16% p.a. interest + GST on interest & fee + 1.5% processing fee
+              </p>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">Total You Pay:</span>
+                  <div id="cc-total-paid" style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">₹0</div>
+                </div>
+                <div style="text-align: right;">
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">Bank's Earnings:</span>
+                  <div id="cc-bank-earned" class="text-danger" style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600;">₹0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Anti-EMI Option -->
+            <div style="background: var(--safe-bg); border: 1px solid rgba(16, 185, 129, 0.2); padding: 16px; border-radius: 12px;">
+              <h3 style="font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600; color: var(--safe-color); display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <i data-lucide="piggy-bank"></i> Anti-EMI / Save First Route
+              </h3>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px;">
+                Accumulating in debt fund at <span id="compounding-rate-label">8.0%</span> p.a. return rate
+              </p>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">Total You Pay:</span>
+                  <div id="anti-total-paid" style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">₹0</div>
+                </div>
+                <div style="text-align: right;">
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">Your Savings Bonus:</span>
+                  <div id="anti-saved-bonus" class="text-safe" style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600;">+₹0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Win Banner -->
+          <div style="background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--accent-color); border-radius: 10px; padding: 12px; margin-top: 16px; text-align: center; font-weight: 600; font-size: 0.9rem;" id="win-banner">
+            <i data-lucide="sparkles" class="text-accent" style="vertical-align: middle; margin-right: 6px;"></i>
+            Net Anti-EMI Win: <span id="val-win" class="text-accent">You save ~₹-- just by planning ahead!</span>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Custom styles extension for layout tweaks -->
+  <style>
+    @media (min-width: 640px) {
+      #comparison-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .freq-tab {
+      transition: all 0.2s ease;
+    }
+    .freq-tab:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: var(--text-primary) !important;
+    }
+    .freq-tab.active {
+      color: white !important;
+      background: var(--accent-gradient) !important;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+    }
+    .freq-tab:disabled {
+      opacity: 0.3 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+    }
+  </style>
+
+  <!-- Core Application Logic -->
+  <script src="js/anti-emi.js"></script>
+</body>
+</html>
